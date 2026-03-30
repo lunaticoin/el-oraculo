@@ -1,0 +1,34 @@
+manifestVersion: 1
+id: lunaticoin-price-oracle
+category: bitcoin
+name: Bitcoin Price Oracle
+version: "0.1.0"
+tagline: On-chain Bitcoin price from your own node
+description: >-
+  Bitcoin Price Oracle computes historical and current BTC/USD prices using
+  only data from your Bitcoin node. No third-party APIs, no external data.
+
+  It detects round-dollar transaction patterns in block outputs to derive
+  prices with 0.11% median accuracy (from block 550,000 / Nov 2018 onward).
+  Earlier blocks use embedded historical prices.
+
+  Provides a REST API for querying prices by block height or date.
+  Indexes in about 2 hours via RPC. Uses less than 100MB of RAM.
+
+  Based on the brk_oracle algorithm from Bitcoin Research Kit (MIT license).
+releaseNotes: >-
+  Initial release.
+developer: Lunaticoin
+website: https://github.com/lunaticoin/bitcoin-price-oracle
+dependencies:
+  - bitcoin
+repo: https://github.com/lunaticoin/bitcoin-price-oracle
+support: https://github.com/lunaticoin/bitcoin-price-oracle/issues
+icon: https://raw.githubusercontent.com/lunaticoin/lunaticoin-umbrel-app-store/main/lunaticoin-price-oracle/icon.svg
+port: 3200
+gallery: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+submitter: Lunaticoin
+submission: https://github.com/lunaticoin/lunaticoin-umbrel-app-store
