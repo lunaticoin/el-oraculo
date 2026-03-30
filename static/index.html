@@ -1,681 +1,766 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bitcoin Price Oracle</title>
+<title>The Bitcoin Oracle</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg-primary: #F5F5F5;
-  --bg-secondary: #FFFFFF;
-  --bg-tertiary: #E8E8E8;
-  --text-primary: #1F2937;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
-  --border-color: #D1D5DB;
-  --accent: #f7931a;
-  --accent-hover: #e8850f;
-  --accent-bg: rgba(247,147,26,0.08);
-  --accent-border: rgba(247,147,26,0.2);
-  --green: #059669;
-  --red: #DC2626;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-  --chart-grid: rgba(0,0,0,0.06);
-  --chart-fill-top: rgba(247,147,26,0.12);
-  --chart-fill-bot: rgba(247,147,26,0.0);
-}
-
-[data-theme="dark"] {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #484f58;
-  --border-color: #30363d;
-  --accent: #f7931a;
-  --accent-hover: #ffab40;
-  --accent-bg: rgba(247,147,26,0.06);
-  --accent-border: rgba(247,147,26,0.15);
-  --green: #3fb950;
-  --red: #f85149;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
-  --chart-grid: rgba(255,255,255,0.04);
-  --chart-fill-top: rgba(247,147,26,0.15);
-  --chart-fill-bot: rgba(247,147,26,0.0);
+  --void: #0c0a14;
+  --abyss: #110e1d;
+  --deep: #1a1530;
+  --surface: #221c3a;
+  --border: rgba(201,168,76,0.12);
+  --border-glow: rgba(201,168,76,0.25);
+  --gold: #c9a84c;
+  --gold-bright: #e4c76b;
+  --gold-dim: #8a7234;
+  --gold-bg: rgba(201,168,76,0.06);
+  --text: #c8bfa0;
+  --text-dim: #6e6555;
+  --text-bright: #e8dfc0;
+  --purple: #7b5ea7;
+  --purple-glow: rgba(123,94,167,0.15);
+  --crimson: #a84040;
+  --emerald: #5a9a6a;
+  --crystal: rgba(180,200,255,0.6);
+  --font-display: 'Cinzel Decorative', 'Cinzel', serif;
+  --font-heading: 'Cinzel', serif;
+  --font-body: 'Cormorant Garamond', 'Georgia', serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
   min-height: 100vh;
-  transition: background 0.3s, color 0.3s;
+  overflow-x: hidden;
+}
+
+/* ─── STARFIELD BG ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(1px 1px at 10% 20%, rgba(228,199,107,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 60%, rgba(228,199,107,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 10%, rgba(228,199,107,0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 80%, rgba(228,199,107,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 40%, rgba(228,199,107,0.2) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 15% 85%, rgba(180,200,255,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 35%, rgba(180,200,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 15%, rgba(180,200,255,0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 45%, rgba(228,199,107,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 55%, rgba(180,200,255,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 70%, rgba(228,199,107,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 5% 50%, rgba(180,200,255,0.2) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 90%, rgba(228,199,107,0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 5%, rgba(180,200,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 95% 95%, rgba(228,199,107,0.15) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: twinkle 8s ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* ─── LAYOUT ─── */
+.scroll { position: relative; z-index: 1; }
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ─── ORNAMENTAL BORDER ─── */
+.ornament {
+  text-align: center;
+  color: var(--gold-dim);
+  font-size: 14px;
+  letter-spacing: 0.5em;
+  padding: 8px 0;
+  opacity: 0.5;
 }
 
 /* ─── NAV ─── */
-nav {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
-  backdrop-filter: blur(12px);
-  height: 56px;
-}
-
-.nav-inner {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  height: 100%;
+.nav {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.nav-left { display: flex; align-items: center; gap: 0.75rem; }
-
-.nav-logo { width: 28px; height: 28px; flex-shrink: 0; }
-.nav-logo svg { width: 100%; height: 100%; }
-
-.nav-brand {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-primary);
+.nav-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--gold);
 }
-.nav-brand span { color: var(--accent); }
 
-.nav-tabs {
+.nav-links {
   display: flex;
-  gap: 0;
-  height: 100%;
+  align-items: center;
+  gap: 20px;
 }
 
-.nav-tab {
+.nav-link {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 0 1rem;
-  height: 100%;
   cursor: pointer;
-  transition: all 0.2s;
+  font-weight: 400;
+  transition: color 0.3s;
+}
+.nav-link:hover, .nav-link.active { color: var(--gold); }
+
+.nav-status {
   display: flex;
   align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
 }
 
-.nav-tab:hover { color: var(--text-primary); }
-.nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-.nav-right { display: flex; align-items: center; gap: 0.5rem; }
-
-.nav-sync {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.sync-dot {
+.status-orb {
   width: 6px; height: 6px;
-  background: var(--green);
   border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 6px rgba(90,154,106,0.5);
 }
-.sync-dot.syncing { background: var(--accent); animation: pulse 1.5s infinite; }
-@keyframes pulse { 50% { opacity: 0.3; } }
-
-.theme-btn {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  width: 32px; height: 32px;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  transition: all 0.2s;
+.status-orb.syncing {
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(201,168,76,0.5);
+  animation: orbPulse 2s infinite;
 }
-.theme-btn:hover { color: var(--accent); border-color: var(--accent-border); }
+@keyframes orbPulse { 50% { opacity: 0.3; box-shadow: 0 0 12px rgba(201,168,76,0.8); } }
 
-/* ─── MAIN ─── */
-.container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 1.5rem;
+/* ─── CRYSTAL BALL / HERO ─── */
+.hero {
+  text-align: center;
+  padding: 48px 0 40px;
 }
 
-.view { display: none; }
-.view.active { display: block; animation: fadeIn 0.2s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-
-/* ─── CARDS ─── */
-.card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.2s, box-shadow 0.2s;
+.crystal-ball {
+  width: 220px;
+  height: 220px;
+  margin: 0 auto 24px;
+  position: relative;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(180,200,255,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 65% 70%, rgba(123,94,167,0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, var(--deep) 0%, var(--abyss) 60%, var(--void) 100%);
+  box-shadow:
+    0 0 60px rgba(123,94,167,0.15),
+    0 0 120px rgba(123,94,167,0.05),
+    inset 0 0 60px rgba(0,0,0,0.5),
+    inset 0 -20px 40px rgba(123,94,167,0.08);
+  overflow: hidden;
 }
 
-/* ─── HERO ─── */
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  align-items: start;
+.crystal-ball::before {
+  content: '';
+  position: absolute;
+  top: 12%;
+  left: 22%;
+  width: 30%;
+  height: 20%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: rotate(-20deg);
 }
 
-.price-label {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 0.5rem;
+.crystal-ball::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.15);
+  box-shadow: inset 0 0 30px rgba(201,168,76,0.05);
 }
 
-.price-value {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: clamp(2rem, 7vw, 3.25rem);
-  font-weight: 700;
+.crystal-price {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: 80%;
+}
+
+.crystal-price-value {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 4vw, 32px);
+  color: var(--gold-bright);
+  text-shadow: 0 0 20px rgba(228,199,107,0.3);
   line-height: 1.1;
-  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
-.price-value .dollar { color: var(--accent); font-weight: 400; }
+.crystal-price-value .dollar {
+  font-size: 0.7em;
+  opacity: 0.7;
+  font-family: var(--font-heading);
+}
 
-.price-change {
-  display: inline-flex;
+.crystal-change {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 6px;
+}
+.crystal-change.up { color: var(--emerald); }
+.crystal-change.down { color: var(--crimson); }
+
+.crystal-base {
+  width: 100px;
+  height: 20px;
+  margin: -6px auto 0;
+  background: linear-gradient(to bottom, var(--gold-dim) 0%, #5a4a20 100%);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  opacity: 0.4;
+}
+
+.hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  margin-top: 20px;
+}
+
+.hero-inscription {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 4vw, 28px);
+  color: var(--gold);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+.hero-meta {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.hero-meta span { display: flex; align-items: center; gap: 4px; }
+
+.glyph { color: var(--gold-dim); font-size: 13px; }
+
+/* ─── DIVIDER ─── */
+.divider {
+  display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  margin-top: 0.5rem;
+  gap: 12px;
+  padding: 4px 0;
+  color: var(--gold-dim);
+  font-size: 10px;
 }
-.price-change.up { background: rgba(5,150,105,0.12); color: var(--green); }
-.price-change.down { background: rgba(220,38,38,0.12); color: var(--red); }
-
-.price-meta {
-  display: flex;
-  gap: 1.5rem;
-  margin-top: 0.75rem;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  flex-wrap: wrap;
-}
-.price-meta .label { color: var(--text-muted); margin-right: 0.25rem; }
-.price-meta .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; }
-
-.hero-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.35rem;
-}
-
-.source-badge {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 1px solid var(--accent-border);
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  white-space: nowrap;
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-glow), transparent);
 }
 
 /* ─── CHART ─── */
-.chart-card { padding: 1rem 1rem 0.75rem; margin-bottom: 1.5rem; }
+.chart-section {
+  padding: 24px 0;
+}
 
 .chart-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
-  padding: 0 0.5rem;
+  margin-bottom: 16px;
 }
 
-.chart-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
-
-.tf-group {
-  display: flex;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  overflow: hidden;
+.chart-title {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
+
+.tf-group { display: flex; gap: 2px; }
 
 .tf-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  font-weight: 500;
-  padding: 0.4rem 0.7rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 10px;
   cursor: pointer;
-  transition: all 0.15s;
-  border-right: 1px solid var(--border-color);
+  transition: all 0.3s;
 }
-.tf-btn:last-child { border-right: none; }
-.tf-btn:hover { color: var(--text-primary); background: var(--bg-tertiary); }
-.tf-btn.active { color: var(--accent); background: var(--accent-bg); }
+.tf-btn:hover { border-color: var(--border-glow); color: var(--text); }
+.tf-btn.active { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-bg); }
 
 .chart-wrap {
   position: relative;
   cursor: crosshair;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(26,21,48,0.5) 0%, rgba(12,10,20,0.8) 100%);
+  padding: 12px 12px 4px;
 }
+
 .chart-wrap canvas { display: block; width: 100%; }
 
 .chart-tooltip {
   position: absolute;
   pointer-events: none;
-  background: var(--bg-secondary);
-  border: 1px solid var(--accent-border);
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
+  background: var(--abyss);
+  border: 1px solid var(--border-glow);
+  padding: 8px 12px;
+  font-size: 13px;
   opacity: 0;
-  transition: opacity 0.1s;
+  transition: opacity 0.15s;
   z-index: 10;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 .chart-tooltip.visible { opacity: 1; }
-.tt-price { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.85rem; }
-.tt-date { color: var(--text-secondary); margin-top: 0.1rem; }
-.tt-block { color: var(--text-muted); font-size: 0.65rem; }
+.tt-price { font-family: var(--font-heading); color: var(--gold-bright); font-size: 15px; }
+.tt-date { color: var(--text-dim); font-family: var(--font-body); margin-top: 2px; font-size: 12px; }
+.tt-block { color: var(--text-dim); font-family: var(--font-mono); font-size: 10px; }
 
 .chart-crosshair {
   position: absolute;
   top: 0;
   width: 1px;
   height: 100%;
-  background: var(--accent);
+  background: linear-gradient(to bottom, transparent, var(--gold-dim), transparent);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.1s;
 }
-.chart-crosshair.visible { opacity: 0.3; }
+.chart-crosshair.visible { opacity: 0.4; }
 
-/* ─── SEARCH ─── */
-.search-card { margin-bottom: 1.5rem; }
+.chart-dot {
+  position: absolute;
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px rgba(201,168,76,0.5);
+}
+.chart-dot.visible { opacity: 1; }
 
-.search-box {
+/* ─── SCRYING (SEARCH) ─── */
+.scrying {
+  padding: 24px 0;
+}
+
+.scrying-title {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 12px;
   display: flex;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  overflow: hidden;
-  transition: border-color 0.2s;
+  align-items: center;
+  gap: 8px;
 }
-.search-box:focus-within { border-color: var(--accent); }
 
-.search-prefix {
-  padding: 0.7rem 0.85rem;
-  color: var(--accent);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-  background: var(--bg-primary);
-  border-right: 1px solid var(--border-color);
+.scrying-box {
+  display: flex;
+  border: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+.scrying-box:focus-within { border-color: var(--border-glow); box-shadow: 0 0 20px rgba(123,94,167,0.08); }
+
+.scrying-symbol {
+  padding: 10px 14px;
+  color: var(--gold-dim);
+  font-family: var(--font-display);
+  font-size: 16px;
+  border-right: 1px solid var(--border);
+  background: rgba(201,168,76,0.02);
   display: flex;
   align-items: center;
 }
 
-.search-input {
+.scrying-input {
   flex: 1;
-  background: var(--bg-secondary);
+  background: transparent;
   border: none;
-  color: var(--text-primary);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  padding: 0.7rem 0.85rem;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 10px 14px;
   outline: none;
 }
-.search-input::placeholder { color: var(--text-muted); }
+.scrying-input::placeholder { color: var(--text-dim); font-style: italic; font-family: var(--font-body); }
 
-.search-btn {
-  background: var(--accent);
+.scrying-invoke {
+  background: none;
   border: none;
-  color: #fff;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.7rem 1.25rem;
+  border-left: 1px solid var(--border);
+  color: var(--gold-dim);
+  font-family: var(--font-heading);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 20px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.3s;
 }
-.search-btn:hover { background: var(--accent-hover); }
+.scrying-invoke:hover { color: var(--gold); background: var(--gold-bg); }
 
-.search-result {
-  margin-top: 0.75rem;
-  padding: 1rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+.scrying-result {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  background: rgba(26,21,48,0.3);
   display: none;
+  text-align: center;
 }
-.search-result.visible { display: block; animation: fadeIn 0.15s ease; }
-.search-result.error { border-color: var(--red); }
-.search-result.error .sr-meta { color: var(--red); }
-.sr-price { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; margin-bottom: 0.25rem; }
-.sr-meta { font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.scrying-result.visible { display: block; animation: reveal 0.5s ease; }
+.scrying-result.error { border-color: rgba(168,64,64,0.3); }
+.scrying-result.error .sr-meta { color: var(--crimson); }
 
-/* ─── API DOCS ─── */
-.api-section { margin-bottom: 1.5rem; }
-.api-section h3 {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.endpoint {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+.sr-price {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--gold-bright);
+  text-shadow: 0 0 15px rgba(228,199,107,0.2);
+  margin-bottom: 6px;
+}
+.sr-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.endpoint-method {
-  display: inline-block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.15rem 0.5rem;
-  border-radius: 0.25rem;
-  background: var(--accent-bg);
-  color: var(--accent);
-  margin-right: 0.5rem;
+/* ─── API GRIMOIRE ─── */
+.api-view { display: none; }
+.api-view.active { display: block; padding: 24px 0; }
+.dash-view.active { display: block; }
+
+.grimoire-intro {
+  padding: 20px;
+  border: 1px solid var(--border);
+  background: rgba(26,21,48,0.3);
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 24px;
+  font-style: italic;
+}
+.grimoire-intro b { color: var(--gold); font-style: normal; }
+
+.spell-block {
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+  padding: 16px;
 }
 
-.endpoint-path {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  color: var(--text-primary);
+.spell-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
-.endpoint-desc {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-top: 0.5rem;
-  line-height: 1.5;
+.spell-method {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--gold);
 }
 
-.endpoint-example {
-  margin-top: 0.5rem;
-  padding: 0.75rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--text-secondary);
+.spell-path {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.spell-desc {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+.spell-example {
+  padding: 10px 14px;
+  background: var(--void);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
   overflow-x: auto;
   white-space: pre;
+  line-height: 1.6;
 }
 
-.api-note {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  padding: 1rem;
-  background: var(--accent-bg);
-  border: 1px solid var(--accent-border);
-  border-radius: 0.5rem;
+.specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  border: 1px solid var(--border);
 }
-.api-note strong { color: var(--accent); }
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.spec-label { color: var(--text-dim); font-style: italic; }
+.spec-value { color: var(--text); font-family: var(--font-mono); font-size: 12px; }
 
 /* ─── FOOTER ─── */
-footer {
-  padding: 1.5rem 0;
-  border-top: 1px solid var(--border-color);
-  margin-top: 1rem;
+.footer {
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-dim);
 }
 
-footer a { color: var(--text-secondary); text-decoration: none; }
-footer a:hover { color: var(--accent); }
+.footer a { color: var(--text-dim); text-decoration: none; transition: color 0.3s; }
+.footer a:hover { color: var(--gold); }
 
-.sync-detail { display: flex; align-items: center; gap: 0.5rem; }
-.sync-bar { width: 50px; height: 3px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden; }
-.sync-bar-fill { height: 100%; background: var(--green); transition: width 0.5s; border-radius: 2px; }
+.sync-bar-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.sync-bar-track {
+  width: 40px; height: 2px;
+  background: var(--border-glow);
+  overflow: hidden;
+}
+
+.sync-bar-fill {
+  height: 100%;
+  background: var(--emerald);
+  transition: width 0.5s;
+}
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 640px) {
-  .hero-grid { grid-template-columns: 1fr; }
-  .hero-badge { align-items: flex-start; flex-direction: row; }
-  .nav-tabs { display: none; }
-  .container { padding: 1rem; }
+  .container { padding: 0 16px; }
+  .crystal-ball { width: 180px; height: 180px; }
+  .hero-meta { flex-direction: column; gap: 6px; }
+  .specs-grid { grid-template-columns: 1fr; }
+  .nav-links { gap: 12px; }
 }
 </style>
 </head>
 <body>
-
-<nav>
-  <div class="nav-inner">
-    <div class="nav-left">
-      <div class="nav-logo"><svg viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="bg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(512 420) rotate(90) scale(540)"><stop offset="0%" stop-color="#18222B"/><stop offset="58%" stop-color="#10161C"/><stop offset="100%" stop-color="#090C10"/></radialGradient><radialGradient id="orbFill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(438 340) rotate(50) scale(390)"><stop offset="0%" stop-color="#F4FAFF" stop-opacity="0.26"/><stop offset="22%" stop-color="#B9DDF4" stop-opacity="0.16"/><stop offset="55%" stop-color="#63859A" stop-opacity="0.10"/><stop offset="100%" stop-color="#0C1217" stop-opacity="0.04"/></radialGradient><linearGradient id="orbStroke" x1="292" y1="252" x2="734" y2="760" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F4FAFF" stop-opacity="0.72"/><stop offset="38%" stop-color="#A5D2EB" stop-opacity="0.34"/><stop offset="100%" stop-color="#627989" stop-opacity="0.22"/></linearGradient><linearGradient id="eclipse" x1="606" y1="318" x2="450" y2="680" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.82"/><stop offset="48%" stop-color="#CBEAFF" stop-opacity="0.34"/><stop offset="100%" stop-color="#8CCFFF" stop-opacity="0.06"/></linearGradient><filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="26" stdDeviation="30" flood-color="#000000" flood-opacity="0.36"/></filter><filter id="blur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="18"/></filter><clipPath id="orbClip"><circle cx="512" cy="512" r="228"/></clipPath></defs><rect x="64" y="64" width="896" height="896" rx="220" fill="url(#bg)"/><circle cx="512" cy="512" r="246" fill="#90D8FF" fill-opacity="0.045" filter="url(#blur)"/><g filter="url(#shadow)"><circle cx="512" cy="512" r="228" fill="url(#orbFill)"/><circle cx="512" cy="512" r="220" stroke="url(#orbStroke)" stroke-width="12"/></g><g clip-path="url(#orbClip)"><path d="M620 344C668 392 698 458 698 530C698 640 634 734 541 776C605 730 646 641 646 535C646 453 618 385 570 340C587 338 605 340 620 344Z" fill="url(#eclipse)"/><path d="M590 338C632 382 658 444 658 516C658 634 596 731 506 776C554 730 586 640 586 534C586 451 566 386 530 342C550 338 572 336 590 338Z" fill="#081016" fill-opacity="0.34"/><path d="M382 366C416 334 460 314 510 314" stroke="#F8FCFF" stroke-opacity="0.54" stroke-width="16" stroke-linecap="round"/><ellipse cx="410" cy="402" rx="48" ry="22" transform="rotate(-28 410 402)" fill="#F6FBFF" fill-opacity="0.10"/><path d="M392 646C430 682 482 704 538 704C570 704 602 697 629 683" stroke="#D6EEFF" stroke-opacity="0.14" stroke-width="10" stroke-linecap="round"/></g></svg></div>
-      <div class="nav-brand"><span>Bitcoin</span> Price Oracle</div>
-    </div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-view="dashboard">Dashboard</button>
-      <button class="nav-tab" data-view="api">API Docs</button>
-    </div>
-    <div class="nav-right">
-      <div class="nav-sync" id="syncBadge"><div class="sync-dot" id="syncDot"></div><span id="syncText">...</span></div>
-      <button class="theme-btn" id="themeBtn" title="Toggle theme">&#9788;</button>
-    </div>
-  </div>
-</nav>
-
+<div class="scroll">
 <div class="container">
 
-<!-- ═══ DASHBOARD VIEW ═══ -->
-<div class="view active" id="view-dashboard">
+  <div class="ornament">&#10040; &#10038; &#10040;</div>
 
-  <section class="hero-grid">
-    <div>
-      <div class="price-label">On-chain consensus price</div>
-      <div class="price-value"><span class="dollar">$</span><span id="priceNum">--</span></div>
-      <div class="price-change" id="priceChange">&mdash;</div>
-      <div class="price-meta">
-        <span><span class="label">Block</span><span class="mono" id="blockHeight">&mdash;</span></span>
-        <span><span class="label">Time</span><span class="mono" id="blockTime">&mdash;</span></span>
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-title">The Bitcoin Oracle</div>
+    <div class="nav-links">
+      <button class="nav-link active" data-view="dashboard">Visions</button>
+      <button class="nav-link" data-view="api">Grimoire</button>
+      <div class="nav-status">
+        <div class="status-orb" id="syncDot"></div>
+        <span id="syncText">...</span>
       </div>
     </div>
-    <div class="hero-badge">
-      <div class="source-badge">100% on-chain</div>
-    </div>
-  </section>
+  </nav>
 
-  <section class="card chart-card">
-    <div class="chart-header">
-      <div class="chart-title">Price History</div>
-      <div class="tf-group">
-        <button class="tf-btn" data-range="1M">1M</button>
-        <button class="tf-btn" data-range="6M">6M</button>
-        <button class="tf-btn" data-range="1Y">1Y</button>
-        <button class="tf-btn active" data-range="ALL">ALL</button>
+  <!-- DASHBOARD -->
+  <div class="dash-view active" id="view-dashboard">
+
+    <!-- CRYSTAL BALL HERO -->
+    <div class="hero">
+      <div class="hero-subtitle">The Oracle reveals</div>
+      <div class="crystal-ball">
+        <div class="crystal-price">
+          <div class="crystal-price-value"><span class="dollar">$</span><span id="priceNum">...</span></div>
+          <div class="crystal-change" id="priceChange">...</div>
+        </div>
+      </div>
+      <div class="crystal-base"></div>
+
+      <div class="hero-inscription">per Bitcoin</div>
+
+      <div class="hero-meta">
+        <span><span class="glyph">&#9830;</span> Block <span id="blockHeight">...</span></span>
+        <span><span class="glyph">&#9719;</span> <span id="blockTime">...</span></span>
       </div>
     </div>
-    <div class="chart-wrap" id="chartWrap">
-      <canvas id="chart" height="300"></canvas>
-      <div class="chart-crosshair" id="crosshair"></div>
-      <div class="chart-tooltip" id="tooltip">
-        <div class="tt-price"></div>
-        <div class="tt-date"></div>
-        <div class="tt-block"></div>
+
+    <div class="divider">&#10038;</div>
+
+    <!-- CHART -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="chart-title">&#9733; Price History</div>
+        <div class="tf-group">
+          <button class="tf-btn" data-range="1M">1M</button>
+          <button class="tf-btn" data-range="6M">6M</button>
+          <button class="tf-btn" data-range="1Y">1Y</button>
+          <button class="tf-btn active" data-range="ALL">ALL</button>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chartWrap">
+        <canvas id="chart" height="280"></canvas>
+        <div class="chart-crosshair" id="crosshair"></div>
+        <div class="chart-dot" id="chartDot"></div>
+        <div class="chart-tooltip" id="tooltip">
+          <div class="tt-price"></div>
+          <div class="tt-date"></div>
+          <div class="tt-block"></div>
+        </div>
       </div>
     </div>
-  </section>
 
-  <section class="card search-card">
-    <div class="price-label" style="margin-bottom:0.75rem">Price Lookup</div>
-    <div class="search-box">
-      <div class="search-prefix">&gt;</div>
-      <input class="search-input" id="searchInput" type="text" placeholder="block height or date (YYYY-MM-DD)">
-      <button class="search-btn" id="searchBtn">QUERY</button>
+    <div class="divider">&#10038;</div>
+
+    <!-- SCRYING (SEARCH) -->
+    <div class="scrying">
+      <div class="scrying-title"><span>&#128302;</span> Scry the past</div>
+      <div class="scrying-box">
+        <div class="scrying-symbol">&#10022;</div>
+        <input class="scrying-input" id="searchInput" type="text" placeholder="Speak a block height or date...">
+        <button class="scrying-invoke" id="searchBtn">Divine</button>
+      </div>
+      <div class="scrying-result" id="searchResult">
+        <div class="sr-price" id="srPrice"></div>
+        <div class="sr-meta" id="srMeta"></div>
+      </div>
     </div>
-    <div class="search-result" id="searchResult">
-      <div class="sr-price" id="srPrice"></div>
-      <div class="sr-meta" id="srMeta"></div>
+
+  </div>
+
+  <!-- API GRIMOIRE -->
+  <div class="api-view" id="view-api">
+
+    <div class="grimoire-intro">
+      <b>The Grimoire</b> &mdash; these incantations summon BTC/USD prices divined entirely from the blockchain itself, through the <code>brk_oracle</code> algorithm. No exchange feeds. No external APIs. Pure on-chain revelation. The oracle listens on <b>port 3200</b>.
     </div>
-  </section>
+
+    <div class="spell-block">
+      <div class="spell-header">
+        <span class="spell-method">GET</span>
+        <span class="spell-path">/api/price/latest</span>
+      </div>
+      <div class="spell-desc">The latest price revealed by the oracle.</div>
+      <div class="spell-example">curl http://umbrel.local:3200/api/price/latest
+
+{"height":942928,"price_usd":68260.19,"timestamp":1774874850}</div>
+    </div>
+
+    <div class="spell-block">
+      <div class="spell-header">
+        <span class="spell-method">GET</span>
+        <span class="spell-path">/api/price/{height}</span>
+      </div>
+      <div class="spell-desc">Divine the price at any block height.</div>
+      <div class="spell-example">curl http://umbrel.local:3200/api/price/800000
+
+{"height":800000,"price_usd":29806.73,"timestamp":1690168629}</div>
+    </div>
+
+    <div class="spell-block">
+      <div class="spell-header">
+        <span class="spell-method">GET</span>
+        <span class="spell-path">/api/price/date/{YYYY-MM-DD}</span>
+      </div>
+      <div class="spell-desc">Scry the price on a specific date.</div>
+      <div class="spell-example">curl http://umbrel.local:3200/api/price/date/2024-01-15
+
+{"date":"2024-01-15","height":825000,"price_usd":42853.0,"timestamp":1705276800}</div>
+    </div>
+
+    <div class="spell-block">
+      <div class="spell-header">
+        <span class="spell-method">GET</span>
+        <span class="spell-path">/api/price/range?from={}&amp;to={}</span>
+      </div>
+      <div class="spell-desc">Reveal a range of prices across time. Max 10,000 entries.</div>
+      <div class="spell-example">curl "http://umbrel.local:3200/api/price/range?from=800000&to=800010"
+
+[{"height":800000,"price_usd":29806.73,"timestamp":1690168629},...]</div>
+    </div>
+
+    <div class="spell-block">
+      <div class="spell-header">
+        <span class="spell-method">GET</span>
+        <span class="spell-path">/health</span>
+      </div>
+      <div class="spell-desc">The oracle's state of consciousness.</div>
+      <div class="spell-example">curl http://umbrel.local:3200/health
+
+{"synced_height":942928,"chain_tip":942930,"syncing":false,"progress_percent":99.99}</div>
+    </div>
+
+    <div class="divider" style="margin:20px 0">&#10038;</div>
+
+    <div class="specs-grid">
+      <div class="spec-item"><span class="spec-label">Algorithm</span><span class="spec-value">brk_oracle</span></div>
+      <div class="spec-item"><span class="spec-label">Source</span><span class="spec-value">100% on-chain</span></div>
+      <div class="spec-item"><span class="spec-label">Accuracy</span><span class="spec-value">0.11% median</span></div>
+      <div class="spec-item"><span class="spec-label">Resolution</span><span class="spec-value">per-block</span></div>
+      <div class="spec-item"><span class="spec-label">Storage</span><span class="spec-value">~12 MB</span></div>
+      <div class="spec-item"><span class="spec-label">RAM</span><span class="spec-value">&lt;100 MB</span></div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div><a href="https://github.com/lunaticoin/bitcoin-price-oracle" target="_blank">bitcoin-price-oracle</a> &middot; <a href="https://github.com/bitcoinresearchkit/brk" target="_blank">brk_oracle</a></div>
+    <div class="sync-bar-inline">
+      <div class="sync-bar-track"><div class="sync-bar-fill" id="syncBarFill" style="width:0%"></div></div>
+      <span id="syncProgress">...</span>
+    </div>
+  </footer>
+
+  <div class="ornament">&#10040; &#10038; &#10040;</div>
+
 </div>
-
-<!-- ═══ API DOCS VIEW ═══ -->
-<div class="view" id="view-api">
-  <div class="card" style="margin-bottom:1.5rem">
-    <div class="api-note">
-      <strong>Bitcoin Price Oracle API</strong> serves BTC/USD prices computed 100% on-chain from your own Bitcoin node. Data is provided by the <code>brk_oracle</code> algorithm, which detects round-dollar transaction patterns in block outputs. No external APIs or exchange data are used. The API runs on <strong>port 3200</strong> by default.
-    </div>
-  </div>
-
-  <div class="card api-section">
-    <h3>Endpoints</h3>
-
-    <div class="endpoint">
-      <span class="endpoint-method">GET</span>
-      <span class="endpoint-path">/api/price/latest</span>
-      <div class="endpoint-desc">Returns the price at the most recently synced block.</div>
-      <div class="endpoint-example">curl http://umbrel.local:3200/api/price/latest
-
-{
-  "height": 942928,
-  "price_usd": 68260.19,
-  "timestamp": 1774874850
-}</div>
-    </div>
-
-    <div class="endpoint">
-      <span class="endpoint-method">GET</span>
-      <span class="endpoint-path">/api/price/{height}</span>
-      <div class="endpoint-desc">Returns the price at a specific block height.</div>
-      <div class="endpoint-example">curl http://umbrel.local:3200/api/price/800000
-
-{
-  "height": 800000,
-  "price_usd": 29806.73,
-  "timestamp": 1690168629
-}</div>
-    </div>
-
-    <div class="endpoint">
-      <span class="endpoint-method">GET</span>
-      <span class="endpoint-path">/api/price/date/{YYYY-MM-DD}</span>
-      <div class="endpoint-desc">Returns the price at the first block on or after the given UTC date.</div>
-      <div class="endpoint-example">curl http://umbrel.local:3200/api/price/date/2024-01-15
-
-{
-  "date": "2024-01-15",
-  "height": 825000,
-  "price_usd": 42853.0,
-  "timestamp": 1705276800
-}</div>
-    </div>
-
-    <div class="endpoint">
-      <span class="endpoint-method">GET</span>
-      <span class="endpoint-path">/api/price/range?from={}&to={}</span>
-      <div class="endpoint-desc">Returns prices for a range of block heights or dates. Max 10,000 entries per request. The <code>from</code> and <code>to</code> parameters accept either block heights (numeric) or dates (YYYY-MM-DD format).</div>
-      <div class="endpoint-example">curl "http://umbrel.local:3200/api/price/range?from=800000&to=800010"
-
-[
-  {"height":800000,"price_usd":29806.73,"timestamp":1690168629},
-  {"height":800001,"price_usd":29810.45,"timestamp":1690169234},
-  ...
-]</div>
-    </div>
-
-    <div class="endpoint">
-      <span class="endpoint-method">GET</span>
-      <span class="endpoint-path">/health</span>
-      <div class="endpoint-desc">Returns sync status and progress information.</div>
-      <div class="endpoint-example">curl http://umbrel.local:3200/health
-
-{
-  "synced_height": 942928,
-  "chain_tip": 942930,
-  "syncing": false,
-  "progress_percent": 99.99
-}</div>
-    </div>
-  </div>
-
-  <div class="card api-section">
-    <h3>Configuration</h3>
-    <div class="endpoint">
-      <div class="endpoint-desc" style="margin-top:0">
-        <strong>Port:</strong> 3200 (default)<br>
-        <strong>Data source:</strong> brk_oracle on-chain algorithm<br>
-        <strong>Accuracy:</strong> 0.11% median error (from block 550,000 / Nov 2018)<br>
-        <strong>Resolution:</strong> Per-block (~10 min)<br>
-        <strong>Coverage:</strong> Block 0 to chain tip (embedded prices for blocks 0-549,999, oracle-computed from 550,000+)<br>
-        <strong>Storage:</strong> ~12 MB (prices.bin + timestamps.bin)<br>
-        <strong>RAM usage:</strong> &lt;100 MB
-      </div>
-    </div>
-  </div>
-
-  <div class="card api-section">
-    <h3>Integration Examples</h3>
-    <div class="endpoint">
-      <span class="endpoint-path">JavaScript</span>
-      <div class="endpoint-example">const res = await fetch('/api/price/latest');
-const { price_usd, height } = await res.json();
-console.log(`BTC: $${price_usd} at block ${height}`);</div>
-    </div>
-    <div class="endpoint">
-      <span class="endpoint-path">Python</span>
-      <div class="endpoint-example">import requests
-r = requests.get('http://umbrel.local:3200/api/price/latest')
-print(f"BTC: ${r.json()['price_usd']}")</div>
-    </div>
-    <div class="endpoint">
-      <span class="endpoint-path">cURL</span>
-      <div class="endpoint-example"># Latest price
-curl -s http://umbrel.local:3200/api/price/latest | jq .price_usd
-
-# Price on a specific date
-curl -s http://umbrel.local:3200/api/price/date/2024-06-15 | jq .</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ FOOTER ═══ -->
-<footer>
-  <div>Powered by <a href="https://github.com/lunaticoin/bitcoin-price-oracle" target="_blank">bitcoin-price-oracle</a> &middot; Algorithm by <a href="https://github.com/bitcoinresearchkit/brk" target="_blank">brk_oracle</a></div>
-  <div class="sync-detail">
-    <div class="sync-bar"><div class="sync-bar-fill" id="syncBarFill" style="width:0%"></div></div>
-    <span id="syncProgress" class="mono" style="font-family:'JetBrains Mono',monospace;font-size:0.6rem"></span>
-  </div>
-</footer>
-
 </div>
 
 <script>
@@ -700,28 +785,16 @@ async function fetchJSON(url) {
 }
 
 // ─── NAV ───
-document.querySelectorAll('.nav-tab').forEach(t => {
+document.querySelectorAll('.nav-link').forEach(t => {
   t.addEventListener('click', () => {
-    document.querySelector('.nav-tab.active').classList.remove('active');
+    document.querySelector('.nav-link.active').classList.remove('active');
     t.classList.add('active');
-    document.querySelector('.view.active').classList.remove('active');
-    document.getElementById('view-' + t.dataset.view).classList.add('active');
+    const v = t.dataset.view;
+    document.getElementById('view-dashboard').style.display = v==='dashboard' ? 'block' : 'none';
+    document.getElementById('view-api').style.display = v==='api' ? 'block' : 'none';
+    document.getElementById('view-api').classList.toggle('active', v==='api');
   });
 });
-
-// ─── THEME ───
-const themeBtn = document.getElementById('themeBtn');
-function setTheme(dark) {
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  themeBtn.textContent = dark ? '\u2606' : '\u263E';
-  localStorage.setItem('oracle_theme', dark ? 'dark' : 'light');
-  if (chartData.length) drawChart();
-}
-themeBtn.addEventListener('click', () => {
-  setTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
-});
-const saved = localStorage.getItem('oracle_theme');
-if (saved) setTheme(saved === 'dark');
 
 // ─── DATA LOADING ───
 async function loadLatest() {
@@ -739,11 +812,11 @@ async function loadHealth() {
     const d = document.getElementById('syncDot'), t = document.getElementById('syncText');
     const bar = document.getElementById('syncBarFill'), prog = document.getElementById('syncProgress');
     if (healthData.syncing) {
-      d.classList.add('syncing'); t.textContent = `syncing ${healthData.progress_percent.toFixed(1)}%`;
-      bar.style.width = healthData.progress_percent+'%'; bar.style.background='var(--accent)';
+      d.classList.add('syncing'); t.textContent = `${healthData.progress_percent.toFixed(1)}%`;
+      bar.style.width = healthData.progress_percent+'%'; bar.style.background='var(--gold)';
     } else {
-      d.classList.remove('syncing'); t.textContent = `synced`;
-      bar.style.width='100%'; bar.style.background='var(--green)';
+      d.classList.remove('syncing'); t.textContent = 'attuned';
+      bar.style.width='100%'; bar.style.background='var(--emerald)';
     }
     prog.textContent = fmtInt(healthData.synced_height)+' / '+fmtInt(healthData.chain_tip);
   } catch(e) { console.error(e); }
@@ -757,7 +830,7 @@ async function load24hChange() {
     const ch = ((latestPrice.price_usd - prev.price_usd) / prev.price_usd) * 100;
     const el = document.getElementById('priceChange');
     el.textContent = (ch>=0?'+':'')+ch.toFixed(2)+'%';
-    el.className = 'price-change ' + (ch>=0?'up':'down');
+    el.className = 'crystal-change ' + (ch>=0?'up':'down');
   } catch(e) {}
 }
 
@@ -770,24 +843,19 @@ async function loadChart() {
     const targetPoints = 600;
     const step = Math.max(1, Math.floor(totalBlocks / targetPoints));
 
-    // Build list of heights to sample
     const sampledHeights = [];
     for (let h = start; h <= tip; h += step) sampledHeights.push(h);
     if (sampledHeights[sampledHeights.length-1] !== tip) sampledHeights.push(tip);
 
-    // Fetch in batches using range endpoint
     chartData = [];
     const batchSize = 10000;
     for (let i = 0; i < sampledHeights.length; ) {
       const batchStart = sampledHeights[i];
-      // Find last height in this batch within batchSize range
       let j = i;
       while (j < sampledHeights.length && sampledHeights[j] - batchStart < batchSize) j++;
       const batchEnd = sampledHeights[Math.min(j, sampledHeights.length) - 1];
 
       const data = await fetchJSON(`/api/price/range?from=${batchStart}&to=${batchEnd}`);
-
-      // Sample from the batch at our desired step
       const dataMap = new Map(data.map(d => [d.height, d]));
       for (let k = i; k < j && k < sampledHeights.length; k++) {
         const entry = dataMap.get(sampledHeights[k]);
@@ -795,7 +863,6 @@ async function loadChart() {
       }
       i = j;
     }
-
     drawChart();
   } catch(e) { console.error('Chart load failed:', e); }
 }
@@ -813,8 +880,8 @@ function drawChart() {
   const canvas = document.getElementById('chart');
   const dpr = window.devicePixelRatio||1;
   const wrap = document.getElementById('chartWrap');
-  const w = wrap.clientWidth;
-  const h = 300;
+  const w = wrap.clientWidth - 24;
+  const h = 280;
   canvas.width = w*dpr; canvas.height = h*dpr;
   canvas.style.width = w+'px'; canvas.style.height = h+'px';
   const ctx = canvas.getContext('2d');
@@ -826,7 +893,7 @@ function drawChart() {
   const prices = data.map(d=>d.price_usd);
   const minP = Math.min(...prices)*0.93;
   const maxP = Math.max(...prices)*1.05;
-  const pT=24, pB=30, pL=0, pR=65;
+  const pT=16, pB=24, pL=0, pR=56;
   const pH = h-pT-pB, pW = w-pL-pR;
 
   const toX = i => pL + (i/(data.length-1))*pW;
@@ -835,39 +902,42 @@ function drawChart() {
   ctx.clearRect(0,0,w,h);
 
   // Grid
-  const cs = getComputedStyle(document.documentElement);
-  ctx.strokeStyle = cs.getPropertyValue('--chart-grid').trim();
+  ctx.strokeStyle = 'rgba(201,168,76,0.06)';
   ctx.lineWidth = 1;
+  ctx.setLineDash([2, 6]);
   for (let i=0;i<=4;i++) {
     const y = pT+(pH/4)*i;
     ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(pL+pW,y); ctx.stroke();
   }
+  ctx.setLineDash([]);
 
   // Y labels
-  ctx.fillStyle = cs.getPropertyValue('--text-muted').trim();
-  ctx.font = '10px JetBrains Mono';
+  ctx.fillStyle = '#6e6555';
+  ctx.font = "10px 'JetBrains Mono', monospace";
   ctx.textAlign = 'left';
   for (let i=0;i<=4;i++) {
     const price = maxP-((maxP-minP)/4)*i;
     const y = pT+(pH/4)*i;
-    ctx.fillText('$'+Math.round(price).toLocaleString(), pL+pW+8, y+4);
+    const label = price >= 1000 ? '$'+Math.round(price/1000)+'k' : '$'+Math.round(price);
+    ctx.fillText(label, pL+pW+6, y+3);
   }
 
   // X labels
   ctx.textAlign = 'center';
-  const lc = Math.min(6, data.length);
+  const lc = Math.min(5, data.length);
   for (let i=0;i<lc;i++) {
     const idx = Math.floor((data.length-1)*i/(lc-1));
     const d = new Date(data[idx].timestamp*1000);
     const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const label = activeRange==='1M' ? `${d.getUTCDate()} ${ms[d.getUTCMonth()]}` : `${ms[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-    ctx.fillText(label, toX(idx), h-8);
+    const label = activeRange==='1M' ? `${d.getUTCDate()} ${ms[d.getUTCMonth()]}` : `${ms[d.getUTCMonth()]} '${String(d.getUTCFullYear()).slice(2)}`;
+    ctx.fillText(label, toX(idx), h-6);
   }
 
-  // Gradient fill
+  // Gradient fill (purple-gold mystical)
   const grad = ctx.createLinearGradient(0,pT,0,pT+pH);
-  grad.addColorStop(0, cs.getPropertyValue('--chart-fill-top').trim());
-  grad.addColorStop(1, cs.getPropertyValue('--chart-fill-bot').trim());
+  grad.addColorStop(0, 'rgba(201,168,76,0.12)');
+  grad.addColorStop(0.5, 'rgba(123,94,167,0.06)');
+  grad.addColorStop(1, 'rgba(123,94,167,0.0)');
   ctx.beginPath();
   ctx.moveTo(toX(0), toY(data[0].price_usd));
   for (let i=1;i<data.length;i++) ctx.lineTo(toX(i), toY(data[i].price_usd));
@@ -877,12 +947,14 @@ function drawChart() {
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Line
+  // Line (gold)
   ctx.beginPath();
   ctx.moveTo(toX(0), toY(data[0].price_usd));
   for (let i=1;i<data.length;i++) ctx.lineTo(toX(i), toY(data[i].price_usd));
-  ctx.strokeStyle = '#f7931a';
+  ctx.strokeStyle = '#c9a84c';
   ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
   ctx.stroke();
 
   canvas._meta = { data, toX, toY, pL, pW, pT, pH };
@@ -890,37 +962,49 @@ function drawChart() {
 
 // ─── CHART HOVER ───
 const chartCanvas = document.getElementById('chart');
-const tip = document.getElementById('tooltip');
+const tipEl = document.getElementById('tooltip');
 const cross = document.getElementById('crosshair');
+const dot = document.getElementById('chartDot');
 
-chartCanvas.addEventListener('mousemove', e => {
+function handleChartHover(e) {
   const m = chartCanvas._meta;
   if (!m || m.data.length<2) return;
   const rect = chartCanvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const x = clientX - rect.left;
   const ratio = Math.max(0, Math.min(1, (x-m.pL)/m.pW));
   const idx = Math.round(ratio*(m.data.length-1));
   const d = m.data[idx];
 
-  tip.querySelector('.tt-price').textContent = '$'+fmt(d.price_usd);
-  tip.querySelector('.tt-date').textContent = tsToShort(d.timestamp);
-  tip.querySelector('.tt-block').textContent = 'Block #'+fmtInt(d.height);
+  tipEl.querySelector('.tt-price').textContent = '$'+fmt(d.price_usd);
+  tipEl.querySelector('.tt-date').textContent = tsToShort(d.timestamp);
+  tipEl.querySelector('.tt-block').textContent = '#'+fmtInt(d.height);
 
   const tx = m.toX(idx);
-  let left = tx+12;
+  const ty = m.toY(d.price_usd);
+  let left = tx+10;
   const wrap = document.getElementById('chartWrap');
-  if (left+160 > wrap.clientWidth-10) left = tx-170;
-  tip.style.left = left+'px';
-  tip.style.top = (m.toY(d.price_usd)-10)+'px';
-  tip.classList.add('visible');
-  cross.style.left = tx+'px';
+  if (left+140 > wrap.clientWidth-10) left = tx-150;
+  tipEl.style.left = left+'px';
+  tipEl.style.top = (ty-8)+'px';
+  tipEl.classList.add('visible');
+  cross.style.left = (tx+12)+'px';
   cross.classList.add('visible');
-});
+  dot.style.left = (tx+12)+'px';
+  dot.style.top = (ty+12)+'px';
+  dot.classList.add('visible');
+}
 
-chartCanvas.addEventListener('mouseleave', () => {
-  tip.classList.remove('visible');
+function hideChartHover() {
+  tipEl.classList.remove('visible');
   cross.classList.remove('visible');
-});
+  dot.classList.remove('visible');
+}
+
+chartCanvas.addEventListener('mousemove', handleChartHover);
+chartCanvas.addEventListener('mouseleave', hideChartHover);
+chartCanvas.addEventListener('touchmove', e => { e.preventDefault(); handleChartHover(e); }, {passive:false});
+chartCanvas.addEventListener('touchend', hideChartHover);
 
 // ─── TIMEFRAME ───
 document.querySelectorAll('.tf-btn').forEach(b => {
@@ -942,13 +1026,13 @@ async function doSearch() {
     let data;
     if (/^\d{4}-\d{2}-\d{2}$/.test(q)) data = await fetchJSON(`/api/price/date/${q}`);
     else if (/^\d+$/.test(q)) data = await fetchJSON(`/api/price/${q}`);
-    else throw new Error('Enter a block height (e.g. 800000) or date (e.g. 2024-01-15)');
+    else throw new Error('Speak a block height or date (YYYY-MM-DD)');
     document.getElementById('srPrice').textContent = '$'+fmt(data.price_usd);
-    document.getElementById('srMeta').innerHTML = `<span>Block #${fmtInt(data.height)}</span><span>${tsToShort(data.timestamp)}</span><span>${tsToTime(data.timestamp)}</span>`;
+    document.getElementById('srMeta').innerHTML = `<span>#${fmtInt(data.height)}</span><span>${tsToShort(data.timestamp)}</span><span>${tsToTime(data.timestamp)}</span>`;
     sr.classList.add('visible');
   } catch(e) {
     document.getElementById('srPrice').textContent='';
-    document.getElementById('srMeta').textContent=e.message||'Not found';
+    document.getElementById('srMeta').textContent=e.message||'The oracle sees nothing';
     sr.classList.add('visible','error');
   }
 }
@@ -956,7 +1040,11 @@ document.getElementById('searchBtn').addEventListener('click', doSearch);
 document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
 
 // ─── RESIZE ───
-window.addEventListener('resize', () => { if(chartData.length) drawChart(); });
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if(chartData.length) drawChart(); }, 100);
+});
 
 // ─── INIT ───
 async function init() {

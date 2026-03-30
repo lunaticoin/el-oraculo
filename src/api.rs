@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
+use axum::http::header;
 use axum::response::{Html, IntoResponse};
 use axum::routing::get;
 use axum::{Json, Router};
@@ -65,10 +66,12 @@ pub struct RangeParams {
 }
 
 const INDEX_HTML: &str = include_str!("../static/index.html");
+const FAVICON_SVG: &str = include_str!("../logo.svg");
 
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/", get(serve_index))
+        .route("/favicon.svg", get(serve_favicon))
         .route("/api/price/latest", get(get_latest_price))
         .route("/api/price/date/{date}", get(get_price_at_date))
         .route("/api/price/range", get(get_price_range))
@@ -79,6 +82,10 @@ pub fn router(state: AppState) -> Router {
 
 async fn serve_index() -> impl IntoResponse {
     Html(INDEX_HTML)
+}
+
+async fn serve_favicon() -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "image/svg+xml")], FAVICON_SVG)
 }
 
 async fn get_price_at_height(
