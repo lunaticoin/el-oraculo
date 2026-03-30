@@ -57,36 +57,23 @@ pub async fn run_sync(
             );
             let lines: Vec<&str> = PRICES.lines().collect();
 
-            if use_reader {
-                // Fast path: read timestamps from disk
-                let reader = Reader::new(
-                    config.blocks_dir.clone().unwrap(),
-                    &client,
-                );
-                let rx = reader.read(
-                    Some(Height::from(start as u32)),
-                    Some(Height::from((START_HEIGHT - 1) as u32)),
-                );
-                for read_block in rx {
-                    let block: Block = read_block.into();
-                    let height = *block.height() as usize;
-                    let price: f64 = if height < lines.len() {
-                        lines[height].parse().unwrap_or(0.0)
-                    } else {
-                        lines.last().map(|l| l.parse().unwrap_or(0.0)).unwrap_or(0.0)
-                    };
-                    let timestamp = block.header.time;
-                    store.append(price, timestamp);
+            // Phase 1 always uses RPC headers (fast, only 80 bytes per block)
+            for height in start..START_HEIGHT.min(lines.len()) {
+                let price: f64 = lines[height].parse().unwrap_or(0.0);
+                let hash = client.get_block_hash(height as u64)?;
+                let header = client.get_block_header(&hash)?;
+                store.append(price, header.time);
 
-                    if height % 50_000 == 0 {
-                        info!("Phase 1: block {} / {}", height, START_HEIGHT);
-                        store.flush();
-                    }
+                if height % 10_000 == 0 {
+                    info!("Phase 1: block {} / {}", height, START_HEIGHT);
+                    store.flush();
                 }
-            } else {
-                // Slow path: fetch headers via RPC
-                for height in start..START_HEIGHT.min(lines.len()) {
-                    let price: f64 = lines[height].parse().unwrap_or(0.0);
+            }
+
+            let prices_len = lines.len();
+            if prices_len < START_HEIGHT {
+                for height in start.max(prices_len)..START_HEIGHT {
+                    let price: f64 = lines.last().map(|l| l.parse().unwrap_or(0.0)).unwrap_or(0.0);
                     let hash = client.get_block_hash(height as u64)?;
                     let header = client.get_block_header(&hash)?;
                     store.append(price, header.time);
@@ -94,21 +81,6 @@ pub async fn run_sync(
                     if height % 10_000 == 0 {
                         info!("Phase 1: block {} / {}", height, START_HEIGHT);
                         store.flush();
-                    }
-                }
-
-                let prices_len = lines.len();
-                if prices_len < START_HEIGHT {
-                    for height in start.max(prices_len)..START_HEIGHT {
-                        let price: f64 = lines.last().map(|l| l.parse().unwrap_or(0.0)).unwrap_or(0.0);
-                        let hash = client.get_block_hash(height as u64)?;
-                        let header = client.get_block_header(&hash)?;
-                        store.append(price, header.time);
-
-                        if height % 10_000 == 0 {
-                            info!("Phase 1: block {} / {}", height, START_HEIGHT);
-                            store.flush();
-                        }
                     }
                 }
             }
