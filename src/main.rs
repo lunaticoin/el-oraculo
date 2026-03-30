@@ -34,6 +34,10 @@ struct Args {
     #[arg(long, env = "RPC_PASS", default_value = "bitcoin")]
     rpc_pass: String,
 
+    /// Bitcoin blocks directory (blk*.dat) for fast sync
+    #[arg(long, env = "BLOCKS_DIR")]
+    blocks_dir: Option<String>,
+
     /// Data directory for price storage
     #[arg(long, env = "DATA_DIR", default_value = "/data")]
     data_dir: String,
@@ -65,6 +69,7 @@ async fn main() {
         rpc_url: format!("http://{}:{}", args.rpc_host, args.rpc_port),
         rpc_user: args.rpc_user,
         rpc_pass: args.rpc_pass,
+        blocks_dir: args.blocks_dir.map(std::path::PathBuf::from),
     };
 
     // Spawn sync in background thread (blocking RPC calls)

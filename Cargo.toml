@@ -9,6 +9,7 @@ description = "Lightweight on-chain Bitcoin price oracle for Umbrel"
 brk_oracle = { git = "https://github.com/bitcoinresearchkit/brk", tag = "v0.2.5" }
 brk_types = { git = "https://github.com/bitcoinresearchkit/brk", tag = "v0.2.5" }
 brk_rpc = { git = "https://github.com/bitcoinresearchkit/brk", tag = "v0.2.5", features = ["corepc"] }
+brk_reader = { git = "https://github.com/bitcoinresearchkit/brk", tag = "v0.2.5" }
 
 axum = { version = "0.8", features = ["json", "query"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time", "sync"] }

@@ -1,8 +1,10 @@
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
 use brk_oracle::{cents_to_bin, Config, Oracle, PRICES, START_HEIGHT};
+use brk_reader::Reader;
 use brk_rpc::{backend::Auth, Client};
 use brk_types::{Block, Height};
 use tracing::{error, info};
@@ -13,6 +15,7 @@ pub struct SyncConfig {
     pub rpc_url: String,
     pub rpc_user: String,
     pub rpc_pass: String,
+    pub blocks_dir: Option<PathBuf>,
 }
 
 pub async fn run_sync(
@@ -37,6 +40,14 @@ pub async fn run_sync(
         let stored = store.last_height();
         let start = stored.map(|h| h + 1).unwrap_or(0);
 
+        // Detect if we can use brk_reader
+        let use_reader = config.blocks_dir.as_ref().is_some_and(|d| d.exists());
+        if use_reader {
+            info!("Fast mode: reading blocks from disk via brk_reader");
+        } else {
+            info!("Slow mode: reading blocks via RPC (mount blocks dir for faster sync)");
+        }
+
         // Phase 1: Bootstrap from embedded PRICES (blocks 0..START_HEIGHT)
         if start < START_HEIGHT {
             info!(
@@ -46,27 +57,36 @@ pub async fn run_sync(
             );
             let lines: Vec<&str> = PRICES.lines().collect();
 
-            for height in start..START_HEIGHT.min(lines.len()) {
-                let price: f64 = lines[height].parse().unwrap_or(0.0);
+            if use_reader {
+                // Fast path: read timestamps from disk
+                let reader = Reader::new(
+                    config.blocks_dir.clone().unwrap(),
+                    &client,
+                );
+                let rx = reader.read(
+                    Some(Height::from(start as u32)),
+                    Some(Height::from((START_HEIGHT - 1) as u32)),
+                );
+                for read_block in rx {
+                    let block: Block = read_block.into();
+                    let height = *block.height() as usize;
+                    let price: f64 = if height < lines.len() {
+                        lines[height].parse().unwrap_or(0.0)
+                    } else {
+                        lines.last().map(|l| l.parse().unwrap_or(0.0)).unwrap_or(0.0)
+                    };
+                    let timestamp = block.header.time;
+                    store.append(price, timestamp);
 
-                // Fetch block header for timestamp
-                let hash = client.get_block_hash(height as u64)?;
-                let header = client.get_block_header(&hash)?;
-                let timestamp = header.time;
-
-                store.append(price, timestamp);
-
-                if height % 10_000 == 0 {
-                    info!("Phase 1: block {} / {}", height, START_HEIGHT);
-                    store.flush();
+                    if height % 50_000 == 0 {
+                        info!("Phase 1: block {} / {}", height, START_HEIGHT);
+                        store.flush();
+                    }
                 }
-            }
-
-            // For blocks beyond PRICES coverage but before START_HEIGHT
-            let prices_len = lines.len();
-            if prices_len < START_HEIGHT {
-                for height in start.max(prices_len)..START_HEIGHT {
-                    let price: f64 = lines.last().map(|l| l.parse().unwrap_or(0.0)).unwrap_or(0.0);
+            } else {
+                // Slow path: fetch headers via RPC
+                for height in start..START_HEIGHT.min(lines.len()) {
+                    let price: f64 = lines[height].parse().unwrap_or(0.0);
                     let hash = client.get_block_hash(height as u64)?;
                     let header = client.get_block_header(&hash)?;
                     store.append(price, header.time);
@@ -76,22 +96,35 @@ pub async fn run_sync(
                         store.flush();
                     }
                 }
+
+                let prices_len = lines.len();
+                if prices_len < START_HEIGHT {
+                    for height in start.max(prices_len)..START_HEIGHT {
+                        let price: f64 = lines.last().map(|l| l.parse().unwrap_or(0.0)).unwrap_or(0.0);
+                        let hash = client.get_block_hash(height as u64)?;
+                        let header = client.get_block_header(&hash)?;
+                        store.append(price, header.time);
+
+                        if height % 10_000 == 0 {
+                            info!("Phase 1: block {} / {}", height, START_HEIGHT);
+                            store.flush();
+                        }
+                    }
+                }
             }
 
             store.flush();
             info!("Phase 1 complete: {} blocks bootstrapped", START_HEIGHT);
         }
 
-        // Phase 2: Initialize oracle and process blocks from START_HEIGHT
+        // Phase 2: Initialize oracle
         let resume_height = start.max(START_HEIGHT);
 
-        // Get seed price for oracle initialization
         let oracle = if let Some(meta) = store.load_meta() {
             info!(
                 "Restoring oracle from checkpoint at height {}, ref_bin={}",
                 meta.last_height, meta.ref_bin
             );
-            // Replay last 12 blocks to warm up EMA
             let warmup_start = resume_height.saturating_sub(12);
             Oracle::from_checkpoint(meta.ref_bin, Config::default(), |oracle| {
                 for h in warmup_start..resume_height {
@@ -101,7 +134,6 @@ pub async fn run_sync(
                 }
             })
         } else {
-            // Fresh start: seed from last PRICES entry
             let seed_line = PRICES
                 .lines()
                 .nth(START_HEIGHT.saturating_sub(1))
@@ -114,18 +146,37 @@ pub async fn run_sync(
             );
 
             if resume_height > START_HEIGHT {
-                // Need to process blocks START_HEIGHT..resume_height to catch up oracle state
                 let mut oracle = Oracle::new(start_bin, Config::default());
                 info!(
                     "Phase 2: Catching up oracle from {} to {}",
                     START_HEIGHT, resume_height
                 );
-                for h in START_HEIGHT..resume_height {
-                    if let Ok(block) = fetch_block(&client, h) {
+
+                if use_reader {
+                    let reader = Reader::new(
+                        config.blocks_dir.clone().unwrap(),
+                        &client,
+                    );
+                    let rx = reader.read(
+                        Some(Height::from(START_HEIGHT as u32)),
+                        Some(Height::from((resume_height - 1) as u32)),
+                    );
+                    for read_block in rx {
+                        let block: Block = read_block.into();
+                        let height = *block.height() as usize;
                         oracle.process_block(&block);
+                        if height % 50_000 == 0 {
+                            info!("Phase 2 catch-up: block {}", height);
+                        }
                     }
-                    if h % 10_000 == 0 {
-                        info!("Phase 2 catch-up: block {}", h);
+                } else {
+                    for h in START_HEIGHT..resume_height {
+                        if let Ok(block) = fetch_block(&client, h) {
+                            oracle.process_block(&block);
+                        }
+                        if h % 10_000 == 0 {
+                            info!("Phase 2 catch-up: block {}", h);
+                        }
                     }
                 }
                 oracle
@@ -146,21 +197,52 @@ pub async fn run_sync(
             );
             let mut oracle = oracle;
 
-            for height in resume_height..=current_tip_usize {
-                let block = fetch_block(&client, height)?;
-                let timestamp = block.header.time;
-                oracle.process_block(&block);
-                let price = *oracle.price_dollars();
+            if use_reader {
+                // Fast path: read from disk
+                let reader = Reader::new(
+                    config.blocks_dir.clone().unwrap(),
+                    &client,
+                );
+                let rx = reader.read(
+                    Some(Height::from(resume_height as u32)),
+                    Some(Height::from(current_tip_usize as u32)),
+                );
+                for read_block in rx {
+                    let block: Block = read_block.into();
+                    let height = *block.height() as usize;
+                    let timestamp = block.header.time;
+                    oracle.process_block(&block);
+                    let price = *oracle.price_dollars();
 
-                store.append(price, timestamp);
+                    store.append(price, timestamp);
 
-                if height % 1_000 == 0 {
-                    store.flush();
-                    store.save_meta(height, oracle.ref_bin());
-                    info!(
-                        "Phase 3: block {} / {} (${:.2})",
-                        height, current_tip_usize, price
-                    );
+                    if height % 10_000 == 0 {
+                        store.flush();
+                        store.save_meta(height, oracle.ref_bin());
+                        info!(
+                            "Phase 3: block {} / {} (${:.2})",
+                            height, current_tip_usize, price
+                        );
+                    }
+                }
+            } else {
+                // Slow path: sequential RPC
+                for height in resume_height..=current_tip_usize {
+                    let block = fetch_block(&client, height)?;
+                    let timestamp = block.header.time;
+                    oracle.process_block(&block);
+                    let price = *oracle.price_dollars();
+
+                    store.append(price, timestamp);
+
+                    if height % 1_000 == 0 {
+                        store.flush();
+                        store.save_meta(height, oracle.ref_bin());
+                        info!(
+                            "Phase 3: block {} / {} (${:.2})",
+                            height, current_tip_usize, price
+                        );
+                    }
                 }
             }
 
@@ -172,7 +254,6 @@ pub async fn run_sync(
                 *oracle.price_dollars()
             );
 
-            // Phase 4: Poll for new blocks
             poll_loop(client, oracle, store, chain_tip);
         } else {
             info!("Already synced to tip {}", resume_height - 1);

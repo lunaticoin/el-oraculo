@@ -14,11 +14,13 @@ services:
     stop_grace_period: 1m
     volumes:
       - ${APP_DATA_DIR}/data:/data
+      - ${APP_BITCOIN_DATA_DIR}:/bitcoin:ro
     environment:
       RPC_HOST: ${APP_BITCOIN_NODE_IP}
       RPC_PORT: ${APP_BITCOIN_RPC_PORT}
       RPC_USER: ${APP_BITCOIN_RPC_USER}
       RPC_PASS: ${APP_BITCOIN_RPC_PASS}
+      BLOCKS_DIR: /bitcoin/blocks
       DATA_DIR: /data
       PORT: "3200"
     networks:
