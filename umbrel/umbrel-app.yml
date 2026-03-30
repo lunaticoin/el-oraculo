@@ -2,7 +2,7 @@ manifestVersion: 1
 id: lunaticoin-price-oracle
 category: bitcoin
 name: Bitcoin Price Oracle
-version: "0.1.0"
+version: "0.1.1"
 tagline: On-chain Bitcoin price from your own node
 description: >-
   Bitcoin Price Oracle computes historical and current BTC/USD prices using

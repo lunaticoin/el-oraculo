@@ -1,6 +1,6 @@
 [package]
 name = "bitcoin-price-oracle"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
 description = "Lightweight on-chain Bitcoin price oracle for Umbrel"
